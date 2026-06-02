@@ -34,20 +34,12 @@ def fetch_channel_video_metadata(api_key, channel_id):
     return metadata
 
 
-def validate_video_metadata(metadata):
-    """Validate that the metadata list is non-empty and each item has required fields."""
-    if not isinstance(metadata, list) or len(metadata) == 0:
-        return False, "metadata list is empty or not a list"
-    for i, item in enumerate(metadata):
-        if 'snippet' not in item or 'contentDetails' not in item:
-            return False, f"item {i} is missing 'snippet' or 'contentDetails'"
-    return True, None
-
-
 def write_metadata_file(metadata, data_directory):
-    """Write video metadata JSON to the in-progress directory."""
+    """Write video metadata JSON to in-progress, then move to ready when complete."""
     in_progress_dir = os.path.join(data_directory, 'metadata', 'in-progress')
+    ready_dir = os.path.join(data_directory, 'metadata', 'ready')
     os.makedirs(in_progress_dir, exist_ok=True)
+    os.makedirs(ready_dir, exist_ok=True)
 
     timestamp = datetime.now(timezone.utc).isoformat().replace(":", "-")
     filename = f'video_metadata_{timestamp}.json'
@@ -57,33 +49,13 @@ def write_metadata_file(metadata, data_directory):
     with open(in_progress_file, 'w') as f:
         json.dump(metadata, f, indent=2)
 
-    return in_progress_file
-
-
-def save_video_metadata(metadata, data_directory):
-    """Write video metadata to in-progress, validate, then move to ready if valid."""
-    ready_dir = os.path.join(data_directory, 'metadata', 'ready')
-    os.makedirs(ready_dir, exist_ok=True)
-
-    in_progress_file = write_metadata_file(metadata, data_directory)
-
-    # Validate the written file
-    print("Validating metadata file...")
-    with open(in_progress_file, 'r') as f:
-        written_metadata = json.load(f)
-
-    valid, error = validate_video_metadata(written_metadata)
-
-    if valid:
-        ready_file = os.path.join(ready_dir, os.path.basename(in_progress_file))
-        shutil.move(in_progress_file, ready_file)
-        print(f"Validation passed. File moved to: {ready_file}")
-    else:
-        print(f"Validation failed: {error}")
-        print(f"File left at: {in_progress_file}")
+    ready_file = os.path.join(ready_dir, filename)
+    shutil.move(in_progress_file, ready_file)
+    print(f"Metadata ready at: {ready_file}")
+    return ready_file
 
 
 def download_video_metadata(api_key, channel_id, data_directory):
     """Fetch video metadata from a channel and save it to the data directory."""
     metadata = fetch_channel_video_metadata(api_key, channel_id)
-    save_video_metadata(metadata, data_directory)
+    return write_metadata_file(metadata, data_directory)

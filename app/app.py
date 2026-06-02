@@ -21,4 +21,5 @@ if __name__ == "__main__":
     print(f"Fetching video metadata from channel: {CHANNEL_ID}")
     print("-" * 50)
 
-    download_video_metadata(API_KEY, CHANNEL_ID, DATA_DIRECTORY)
+    metadata_file = download_video_metadata(API_KEY, CHANNEL_ID, DATA_DIRECTORY)
+    print(f"Downloaded metadata file: {metadata_file}")
