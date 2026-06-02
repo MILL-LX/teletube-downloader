@@ -46,8 +46,8 @@ def write_metadata_file(metadata, data_directory):
     os.makedirs(in_progress_dir, exist_ok=True)
     os.makedirs(ready_dir, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).isoformat().replace(":", "-")
-    filename = f"video_metadata_{timestamp}.json"
+    file_timestamp = metadata["metadataUpdatedAt"].replace(":", "-")
+    filename = f"video_metadata_{file_timestamp}.json"
     in_progress_file = os.path.join(in_progress_dir, filename)
 
     logger.info(f"Writing metadata to: {in_progress_file}")
