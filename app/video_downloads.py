@@ -35,7 +35,7 @@ def _is_already_downloaded(video_id, ready_dir):
     return False
 
 
-def download_videos(metadata, data_directory):
+def download_videos(metadata, data_directory, cookies_file=None):
     '''Download videos described in metadata if not already downloaded.
 
     Videos are placed in data/videos/in-progress during download,
@@ -67,8 +67,12 @@ def download_videos(metadata, data_directory):
             'format': 'bestvideo[ext=mp4][height>=360]+bestaudio[ext=m4a]/best[ext=mp4][height>=360]',
             'format_sort': ['+height', '+filesize'],
             'quiet': True,
+            'noplaylist': True,
             'no_warnings': True,
         }
+
+        if cookies_file:
+            ydl_opts['cookiefile'] = cookies_file
 
         logger.info(f'Downloading video: {video_id}')
         try:

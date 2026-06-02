@@ -32,4 +32,6 @@ if __name__ == "__main__":
     print(f"Downloaded metadata file: {metadata_file}")
 
     metadata = load_latest_metadata(DATA_DIRECTORY)
-    download_videos(metadata, DATA_DIRECTORY)
+
+    cookies_file = os.getenv('COOKIES_FILE')
+    download_videos(metadata, DATA_DIRECTORY, cookies_file=cookies_file)
