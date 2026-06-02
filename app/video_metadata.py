@@ -44,21 +44,28 @@ def validate_video_metadata(metadata):
     return True, None
 
 
-def save_video_metadata(metadata, data_directory):
-    """Write video metadata to in-progress, validate, then move to ready if valid."""
+def write_metadata_file(metadata, data_directory):
+    """Write video metadata JSON to the in-progress directory."""
     in_progress_dir = os.path.join(data_directory, 'metadata', 'in-progress')
-    ready_dir = os.path.join(data_directory, 'metadata', 'ready')
     os.makedirs(in_progress_dir, exist_ok=True)
-    os.makedirs(ready_dir, exist_ok=True)
 
     timestamp = datetime.now(timezone.utc).isoformat().replace(":", "-")
     filename = f'video_metadata_{timestamp}.json'
     in_progress_file = os.path.join(in_progress_dir, filename)
 
-    # Write video metadata to in-progress
     print(f"Writing metadata to: {in_progress_file}")
     with open(in_progress_file, 'w') as f:
         json.dump(metadata, f, indent=2)
+
+    return in_progress_file
+
+
+def save_video_metadata(metadata, data_directory):
+    """Write video metadata to in-progress, validate, then move to ready if valid."""
+    ready_dir = os.path.join(data_directory, 'metadata', 'ready')
+    os.makedirs(ready_dir, exist_ok=True)
+
+    in_progress_file = write_metadata_file(metadata, data_directory)
 
     # Validate the written file
     print("Validating metadata file...")
@@ -68,9 +75,15 @@ def save_video_metadata(metadata, data_directory):
     valid, error = validate_video_metadata(written_metadata)
 
     if valid:
-        ready_file = os.path.join(ready_dir, filename)
+        ready_file = os.path.join(ready_dir, os.path.basename(in_progress_file))
         shutil.move(in_progress_file, ready_file)
         print(f"Validation passed. File moved to: {ready_file}")
     else:
         print(f"Validation failed: {error}")
         print(f"File left at: {in_progress_file}")
+
+
+def download_video_metadata(api_key, channel_id, data_directory):
+    """Fetch video metadata from a channel and save it to the data directory."""
+    metadata = fetch_channel_video_metadata(api_key, channel_id)
+    save_video_metadata(metadata, data_directory)

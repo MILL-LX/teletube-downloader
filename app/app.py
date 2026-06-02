@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from video_metadata import fetch_channel_video_metadata, save_video_metadata
+from video_metadata import download_video_metadata
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,5 +21,4 @@ if __name__ == "__main__":
     print(f"Fetching video metadata from channel: {CHANNEL_ID}")
     print("-" * 50)
 
-    metadata = fetch_channel_video_metadata(API_KEY, CHANNEL_ID)
-    save_video_metadata(metadata, DATA_DIRECTORY)
+    download_video_metadata(API_KEY, CHANNEL_ID, DATA_DIRECTORY)
