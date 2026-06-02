@@ -30,7 +30,7 @@ def _is_already_downloaded(video_id, ready_dir):
     '''Return True if a file for this video ID already exists in any year subdirectory.'''
     for entry in os.scandir(ready_dir):
         if entry.is_dir():
-            if any(f.startswith(video_id) for f in os.listdir(entry.path)):
+            if any(f.endswith(f'-{video_id}.mp4') for f in os.listdir(entry.path)):
                 return True
     return False
 
@@ -88,6 +88,7 @@ def download_videos(metadata, data_directory):
                     dst = os.path.join(year_dir, filename)
                     shutil.move(src, dst)
                     logger.info(f'Video ready at: {dst}')
+                    break
         except Exception as e:
             logger.error(f'Failed to move video {video_id} to ready: {e}')
             continue
