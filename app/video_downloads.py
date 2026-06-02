@@ -8,6 +8,12 @@ logger = logging.getLogger(__name__)
 YOUTUBE_URL_TEMPLATE = 'https://www.youtube.com/watch?v={video_id}'
 
 
+def _make_video_filename(title, video_id, ext):
+    '''Build a video filename from title, video ID, and extension.'''
+    safe_title = ''.join(c if c.isalnum() or c in ' ._-' else '_' for c in title).strip()
+    return f'{safe_title}-{video_id}.{ext}'
+
+
 def _get_video_items(metadata):
     '''Extract video ID, title, and publish year from a metadata response.'''
     items = []
@@ -16,9 +22,7 @@ def _get_video_items(metadata):
         published_at = item['contentDetails'].get('videoPublishedAt', '')
         year = published_at[:4] if published_at else 'unknown'
         title = item['snippet'].get('title', video_id)
-        # Sanitize title for use in a filename
-        safe_title = ''.join(c if c.isalnum() or c in ' ._-' else '_' for c in title).strip()
-        items.append((video_id, year, safe_title))
+        items.append((video_id, year, title))
     return items
 
 
@@ -50,13 +54,13 @@ def download_videos(metadata, data_directory):
     video_items = _get_video_items(metadata)
     logger.info(f'Found {len(video_items)} videos in metadata')
 
-    for video_id, year, safe_title in video_items:
+    for video_id, year, title in video_items:
         if _is_already_downloaded(video_id, ready_dir):
             logger.info(f'Skipping already downloaded video: {video_id}')
             continue
 
         url = YOUTUBE_URL_TEMPLATE.format(video_id=video_id)
-        output_template = os.path.join(in_progress_dir, f'{safe_title}-{video_id}.%(ext)s')
+        output_template = os.path.join(in_progress_dir, _make_video_filename(title, video_id, '%(ext)s'))
 
         ydl_opts = {
             'outtmpl': output_template,
@@ -79,7 +83,7 @@ def download_videos(metadata, data_directory):
             year_dir = os.path.join(ready_dir, year)
             os.makedirs(year_dir, exist_ok=True)
             for filename in os.listdir(in_progress_dir):
-                if f'-{video_id}.mp4' in filename:
+                if filename == _make_video_filename(title, video_id, 'mp4'):
                     src = os.path.join(in_progress_dir, filename)
                     dst = os.path.join(year_dir, filename)
                     shutil.move(src, dst)
