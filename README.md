@@ -34,6 +34,11 @@ Video downloading relies on [ffmpeg](https://ffmpeg.org) for post-processing and
 
 Installation instructions: https://ffmpeg.org/download.html
 
+### Deno
+yt-dlp requires Deno to solve YouTube's JavaScript challenge when fetching video formats. Without it, some videos may show no available formats.
+
+Installation instructions: https://docs.deno.com/runtime/getting_started/installation/
+
 ## Running on a schedule with cron
 
 To run the downloader once a day, add a cron entry with `crontab -e`:

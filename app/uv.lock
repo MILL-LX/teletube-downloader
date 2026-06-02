@@ -393,7 +393,7 @@ dependencies = [
 requires-dist = [
     { name = "google-api-python-client", specifier = ">=2.197.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
-    { name = "yt-dlp", specifier = ">=2025.1.15" },
+    { name = "yt-dlp", specifier = ">=2026.3.17" },
 ]
 
 [[package]]
