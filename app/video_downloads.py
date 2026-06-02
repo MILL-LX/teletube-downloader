@@ -57,6 +57,8 @@ def download_videos(metadata, data_directory):
 
         ydl_opts = {
             'outtmpl': output_template,
+            'format': 'bestvideo[ext=mp4][height>=360]+bestaudio[ext=m4a]/best[ext=mp4][height>=360]',
+            'format_sort': ['+height', '+filesize'],
             'quiet': True,
             'no_warnings': True,
         }
