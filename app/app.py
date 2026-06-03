@@ -33,5 +33,4 @@ if __name__ == "__main__":
 
     metadata = load_latest_metadata(DATA_DIRECTORY)
 
-    cookies_from_browser = os.getenv('COOKIES_FROM_BROWSER')
-    download_videos(metadata, DATA_DIRECTORY, cookies_from_browser=cookies_from_browser)
+    download_videos(metadata, DATA_DIRECTORY)
