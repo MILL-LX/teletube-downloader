@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 import logging
 import yt_dlp
 
@@ -61,7 +62,7 @@ def download_videos(metadata, data_directory):
 
         ydl_opts = {
             'outtmpl': output_template,
-            'format': 'bestvideo[height>=360][protocol!=mhtml]+bestaudio[protocol!=mhtml]/best[height>=360][protocol!=mhtml]',
+            'format': 'bestvideo[height>=360][protocol!=mhtml]+bestaudio[protocol!=mhtml]/best[height>=360][vcodec!=none][protocol!=mhtml]',
             'merge_output_format': 'mp4',
             'format_sort': ['+height', '+filesize'],
             'sleep_interval': 2,
@@ -80,13 +81,22 @@ def download_videos(metadata, data_directory):
             logger.error(f'Failed to download video {video_id}: {e}')
             continue
 
-        # Move completed file(s) to ready/{year}
+        # Move completed file(s) to ready/{year} if it contains a video stream
         try:
             year_dir = os.path.join(ready_dir, year)
             os.makedirs(year_dir, exist_ok=True)
             for filename in os.listdir(in_progress_dir):
                 if filename == _make_video_filename(title, video_id, 'mp4'):
                     src = os.path.join(in_progress_dir, filename)
+                    probe = subprocess.run(
+                        ['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+                         '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1', src],
+                        capture_output=True, text=True
+                    )
+                    if 'codec_type=video' not in probe.stdout:
+                        logger.error(f'Downloaded file has no video stream, discarding: {src}')
+                        os.remove(src)
+                        break
                     dst = os.path.join(year_dir, filename)
                     shutil.move(src, dst)
                     logger.info(f'Video ready at: {dst}')
