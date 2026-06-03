@@ -26,13 +26,10 @@ def _get_video_items(metadata):
     return items
 
 
-def _is_already_downloaded(video_id, ready_dir):
-    '''Return True if a file for this video ID already exists in any year subdirectory.'''
-    for entry in os.scandir(ready_dir):
-        if entry.is_dir():
-            if any(f.endswith(f'-{video_id}.mp4') for f in os.listdir(entry.path)):
-                return True
-    return False
+def _is_already_downloaded(video_id, title, year, ready_dir):
+    '''Return True if the video file already exists in the ready directory.'''
+    expected_file = os.path.join(ready_dir, year, _make_video_filename(title, video_id, 'mp4'))
+    return os.path.isfile(expected_file)
 
 
 def download_videos(metadata, data_directory):
@@ -55,7 +52,7 @@ def download_videos(metadata, data_directory):
     logger.info(f'Found {len(video_items)} videos in metadata')
 
     for video_id, year, title in video_items:
-        if _is_already_downloaded(video_id, ready_dir):
+        if _is_already_downloaded(video_id, title, year, ready_dir):
             logger.info(f'Skipping already downloaded video: {video_id}')
             continue
 
