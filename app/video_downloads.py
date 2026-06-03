@@ -61,7 +61,7 @@ def download_videos(metadata, data_directory):
 
         ydl_opts = {
             'outtmpl': output_template,
-            'format': 'bestvideo+bestaudio/best',
+            'format': 'bestvideo[height>=360][protocol!=mhtml]+bestaudio[protocol!=mhtml]/best[height>=360][protocol!=mhtml]',
             'merge_output_format': 'mp4',
             'format_sort': ['+height', '+filesize'],
             'sleep_interval': 2,
