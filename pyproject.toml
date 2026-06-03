@@ -1,7 +1,7 @@
 [project]
 name = "teletube-downloader"
 version = "0.1.0"
-description = "Add your description here"
+description = "Fetches all videos from a YouTube channel and downloads them to local storage, organized by publish year."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
