@@ -116,6 +116,8 @@ def download_videos(metadata, data_directory):
                 return
             if '403' in error_msg or 'Forbidden' in error_msg:
                 _add_to_skip_list(videos_dir, skip_list, video_id, error_msg)
+            if 'This video is not available' in error_msg:
+                _add_to_skip_list(videos_dir, skip_list, video_id, error_msg)
             continue
 
         # Move completed file to ready/{year} if it contains a video stream
