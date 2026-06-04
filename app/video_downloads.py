@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import subprocess
 import logging
@@ -7,6 +8,32 @@ import yt_dlp
 logger = logging.getLogger(__name__)
 
 YOUTUBE_URL_TEMPLATE = 'https://www.youtube.com/watch?v={video_id}'
+SKIP_LIST_FILENAME = 'skip.json'
+
+
+def _load_skip_list(videos_dir):
+    '''Load the skip list from disk. Returns a dict of {video_id: reason}.'''
+    skip_file = os.path.join(videos_dir, SKIP_LIST_FILENAME)
+    if not os.path.isfile(skip_file):
+        return {}
+    try:
+        with open(skip_file, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f'Failed to load skip list: {e}')
+        return {}
+
+
+def _add_to_skip_list(videos_dir, skip_list, video_id, reason):
+    '''Add a video to the skip list and persist it.'''
+    skip_list[video_id] = reason
+    skip_file = os.path.join(videos_dir, SKIP_LIST_FILENAME)
+    try:
+        with open(skip_file, 'w') as f:
+            json.dump(skip_list, f, indent=2)
+        logger.info(f'Added {video_id} to skip list: {reason}')
+    except Exception as e:
+        logger.error(f'Failed to save skip list: {e}')
 
 
 def _make_video_filename(title, video_id, ext):
@@ -39,8 +66,9 @@ def download_videos(metadata, data_directory):
     Videos are placed in data/videos/in-progress during download,
     then moved to data/videos/ready/{year} on completion.
     '''
-    in_progress_dir = os.path.join(data_directory, 'videos', 'in-progress')
-    ready_dir = os.path.join(data_directory, 'videos', 'ready')
+    videos_dir = os.path.join(data_directory, 'videos')
+    in_progress_dir = os.path.join(videos_dir, 'in-progress')
+    ready_dir = os.path.join(videos_dir, 'ready')
 
     try:
         os.makedirs(in_progress_dir, exist_ok=True)
@@ -49,10 +77,14 @@ def download_videos(metadata, data_directory):
         logger.error(f'Failed to create video directories: {e}')
         raise
 
+    skip_list = _load_skip_list(videos_dir)
     video_items = _get_video_items(metadata)
     logger.info(f'Found {len(video_items)} videos in metadata')
 
     for video_id, year, title in video_items:
+        if video_id in skip_list:
+            logger.info(f'Skipping {video_id} (skip list): {skip_list[video_id]}')
+            continue
         if _is_already_downloaded(video_id, title, year, ready_dir):
             logger.info(f'Skipping already downloaded video: {video_id}')
             continue
@@ -67,7 +99,6 @@ def download_videos(metadata, data_directory):
             'format_sort': ['+height', '+filesize'],
             'sleep_interval': 2,
             'max_sleep_interval': 5,
-            # 'ratelimit': 1_000_000,
             'quiet': True,
             'noplaylist': True,
             'no_warnings': True,
@@ -78,10 +109,16 @@ def download_videos(metadata, data_directory):
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
         except Exception as e:
-            logger.error(f'Failed to download video {video_id}: {e}')
+            error_msg = str(e)
+            logger.error(f'Failed to download video {video_id}: {error_msg}')
+            if 'Sign in to confirm' in error_msg or 'not a bot' in error_msg:
+                logger.error('YouTube is rate limiting. Please try again in a couple of hours.')
+                return
+            if '403' in error_msg or 'Forbidden' in error_msg:
+                _add_to_skip_list(videos_dir, skip_list, video_id, error_msg)
             continue
 
-        # Move completed file(s) to ready/{year} if it contains a video stream
+        # Move completed file to ready/{year} if it contains a video stream
         try:
             year_dir = os.path.join(ready_dir, year)
             os.makedirs(year_dir, exist_ok=True)

@@ -219,5 +219,6 @@ __marimo__/
 
 # Application Specific
 data/
+skip.json
 
 run.out
