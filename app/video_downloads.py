@@ -118,6 +118,8 @@ def download_videos(metadata, data_directory):
                 _add_to_skip_list(videos_dir, skip_list, video_id, error_msg)
             if 'This video is not available' in error_msg:
                 _add_to_skip_list(videos_dir, skip_list, video_id, error_msg)
+            if 'Requested format is not available' in error_msg:
+                _add_to_skip_list(videos_dir, skip_list, video_id, error_msg)
             continue
 
         # Move completed file to ready/{year} if it contains a video stream
