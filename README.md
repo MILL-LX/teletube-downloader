@@ -39,6 +39,18 @@ yt-dlp requires Deno to solve YouTube's JavaScript challenge when fetching video
 
 Installation instructions: https://docs.deno.com/runtime/getting_started/installation/
 
+## Usage
+
+Run the full pipeline — fetch metadata then download videos:
+```
+uv run python app.py
+```
+
+Skip the metadata fetch and use the latest already-downloaded metadata:
+```
+uv run python app.py --skip-metadata-download
+```
+
 ## Running on a schedule with cron
 
 To run the downloader once a day, add a cron entry with `crontab -e`:
