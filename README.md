@@ -33,6 +33,12 @@ yt-dlp requires Deno to solve YouTube's JavaScript challenge when fetching video
 
 Installation instructions: https://docs.deno.com/runtime/getting_started/installation/
 
+### CFFI Dependencies
+
+```bash
+sudo apt update
+sudo apt install -y python3-dev libffi-dev pkg-config build-essential
+```
 
 ### 4. Install App Dependencies
 ```
