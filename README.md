@@ -21,13 +21,7 @@ Follow the installation instructions at https://docs.astral.sh/uv/getting-starte
 git clone https://github.com/MILL-LX/teletube-downloader.git
 ```
 
-### 3. Install dependencies
-```
-cd teletube-downloader/app
-uv sync
-```
-
-## Dependencies
+## 3. Install System Dependencies
 
 ### ffmpeg
 Video downloading relies on [ffmpeg](https://ffmpeg.org) for post-processing and merging audio/video streams. Install it before running the app.
@@ -38,6 +32,13 @@ Installation instructions: https://ffmpeg.org/download.html
 yt-dlp requires Deno to solve YouTube's JavaScript challenge when fetching video formats. Without it, some videos may show no available formats.
 
 Installation instructions: https://docs.deno.com/runtime/getting_started/installation/
+
+
+### 4. Install App Dependencies
+```
+cd teletube-downloader
+uv sync
+```
 
 ## Usage
 
