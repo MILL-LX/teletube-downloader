@@ -3,6 +3,8 @@ import json
 import shutil
 import subprocess
 import logging
+from datetime import datetime, timezone
+from typing import Dict, List, Tuple, Any
 import yt_dlp
 
 logger = logging.getLogger(__name__)
@@ -11,8 +13,8 @@ YOUTUBE_URL_TEMPLATE = 'https://www.youtube.com/watch?v={video_id}'
 SKIP_LIST_FILENAME = 'skip.json'
 
 
-def _load_skip_list(videos_dir):
-    '''Load the skip list from disk. Returns a dict of {video_id: reason}.'''
+def _load_skip_list(videos_dir: str) -> Dict[str, Dict[str, str]]:
+    '''Load the skip list from disk. Returns a dict of {video_id: {reason, timestamp}}.'''
     skip_file = os.path.join(videos_dir, SKIP_LIST_FILENAME)
     if not os.path.isfile(skip_file):
         return {}
@@ -24,9 +26,10 @@ def _load_skip_list(videos_dir):
         return {}
 
 
-def _add_to_skip_list(videos_dir, skip_list, video_id, reason):
+def _add_to_skip_list(videos_dir: str, skip_list: Dict[str, Dict[str, str]], video_id: str, reason: str) -> None:
     '''Add a video to the skip list and persist it.'''
-    skip_list[video_id] = reason
+    timestamp = datetime.now(timezone.utc).isoformat()
+    skip_list[video_id] = {'reason': reason, 'timestamp': timestamp}
     skip_file = os.path.join(videos_dir, SKIP_LIST_FILENAME)
     try:
         with open(skip_file, 'w') as f:
@@ -36,31 +39,31 @@ def _add_to_skip_list(videos_dir, skip_list, video_id, reason):
         logger.error(f'Failed to save skip list: {e}')
 
 
-def _make_video_filename(title, video_id, ext):
+def _make_video_filename(title: str, video_id: str, ext: str) -> str:
     '''Build a video filename from title, video ID, and extension.'''
     safe_title = ''.join(c if c.isalnum() or c in ' ._-' else '_' for c in title).strip()
     return f'{safe_title}-{video_id}.{ext}'
 
 
-def _get_video_items(metadata):
+def _get_video_items(metadata: Dict[str, Any]) -> List[Tuple[str, str, str]]:
     '''Extract video ID, title, and publish year from a metadata response.'''
-    items = []
+    items: List[Tuple[str, str, str]] = []
     for item in metadata.get('response', []):
-        video_id = item['contentDetails']['videoId']
-        published_at = item['contentDetails'].get('videoPublishedAt', '')
-        year = published_at[:4] if published_at else 'unknown'
-        title = item['snippet'].get('title', video_id)
+        video_id: str = item['contentDetails']['videoId']
+        published_at: str = item['contentDetails'].get('videoPublishedAt', '')
+        year: str = published_at[:4] if published_at else 'unknown'
+        title: str = item['snippet'].get('title', video_id)
         items.append((video_id, year, title))
     return items
 
 
-def _is_already_downloaded(video_id, title, year, ready_dir):
+def _is_already_downloaded(video_id: str, title: str, year: str, ready_dir: str) -> bool:
     '''Return True if the video file already exists in the ready directory.'''
     expected_file = os.path.join(ready_dir, year, _make_video_filename(title, video_id, 'mp4'))
     return os.path.isfile(expected_file)
 
 
-def download_videos(metadata, data_directory):
+def download_videos(metadata: Dict[str, Any], data_directory: str) -> None:
     '''Download videos described in metadata if not already downloaded.
 
     Videos are placed in data/videos/in-progress during download,
@@ -83,7 +86,7 @@ def download_videos(metadata, data_directory):
 
     for video_id, year, title in video_items:
         if video_id in skip_list:
-            logger.info(f'Skipping {video_id} (skip list): {skip_list[video_id]}')
+            logger.info(f'Skipping {video_id} (skip list): {skip_list[video_id]["reason"]}')
             continue
         if _is_already_downloaded(video_id, title, year, ready_dir):
             logger.info(f'Skipping already downloaded video: {video_id}')
@@ -92,7 +95,7 @@ def download_videos(metadata, data_directory):
         url = YOUTUBE_URL_TEMPLATE.format(video_id=video_id)
         output_template = os.path.join(in_progress_dir, _make_video_filename(title, video_id, '%(ext)s'))
 
-        ydl_opts = {
+        ydl_opts: Dict[str, Any] = {
             'outtmpl': output_template,
             'format': 'bestvideo[height>=360][protocol!=mhtml]+bestaudio[protocol!=mhtml]/best[height>=360][vcodec!=none][protocol!=mhtml]',
             'merge_output_format': 'mp4',
@@ -106,7 +109,7 @@ def download_videos(metadata, data_directory):
 
         logger.info(f'Downloading video: {video_id}')
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore
                 ydl.download([url])
         except Exception as e:
             error_msg = str(e)

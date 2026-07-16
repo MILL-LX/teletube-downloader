@@ -1,6 +1,7 @@
 import os
 import argparse
 import logging
+from typing import Any, Dict
 from dotenv import load_dotenv
 from video_metadata import download_video_metadata, load_latest_metadata
 from video_downloads import download_videos
@@ -18,19 +19,19 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     class UsageOnErrorParser(argparse.ArgumentParser):
-        def error(self, message):
+        def error(self, message: str) -> None:  # type: ignore
             self.print_help()
             print(f'\nerror: {message}')
             raise SystemExit(2)
 
-    parser = UsageOnErrorParser(description='Download YouTube channel videos.', allow_abbrev=False)
+    parser: UsageOnErrorParser = UsageOnErrorParser(description='Download YouTube channel videos.', allow_abbrev=False)
     parser.add_argument('--skip-metadata-download', action='store_true', help='Skip metadata download and use the latest existing metadata file.')
-    args = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args()
 
     # Load credentials from environment variables
-    API_KEY = os.getenv('YOUTUBE_API_KEY')
-    CHANNEL_ID = os.getenv('YOUTUBE_CHANNEL_ID')
-    DATA_DIRECTORY = os.getenv('DATA_DIRECTORY', '../data')
+    API_KEY: str | None = os.getenv('YOUTUBE_API_KEY')
+    CHANNEL_ID: str | None = os.getenv('YOUTUBE_CHANNEL_ID')
+    DATA_DIRECTORY: str = os.getenv('DATA_DIRECTORY', '../data')
 
     # Validate that required variables are set
     if not API_KEY:
@@ -41,11 +42,11 @@ if __name__ == "__main__":
     if not args.skip_metadata_download:
         print(f"Fetching video metadata from channel: {CHANNEL_ID}")
         print("-" * 50)
-        metadata_file = download_video_metadata(API_KEY, CHANNEL_ID, DATA_DIRECTORY)
+        metadata_file: str = download_video_metadata(API_KEY, CHANNEL_ID, DATA_DIRECTORY)
         print(f"Downloaded metadata file: {metadata_file}")
     else:
         logger.info('Skipping metadata download, using latest available metadata.')
 
-    metadata = load_latest_metadata(DATA_DIRECTORY)
+    metadata: Dict[str, Any] = load_latest_metadata(DATA_DIRECTORY)
 
     download_videos(metadata, DATA_DIRECTORY)
