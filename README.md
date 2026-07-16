@@ -46,6 +46,14 @@ cd teletube-downloader
 uv sync
 ```
 
+### 5. Update app/.env 
+
+```bash
+cp app/.env-example app/.env
+```
+
+Update the values for your YouTube API Key, ChannelID, and the data directory where downloaded data will be written.
+
 ## Usage
 
 Run the full pipeline — fetch metadata then download videos:
