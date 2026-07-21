@@ -33,7 +33,9 @@ yt-dlp requires Deno to solve YouTube's JavaScript challenge when fetching video
 
 Installation instructions: https://docs.deno.com/runtime/getting_started/installation/
 
-### CFFI Dependencies
+### Linux CFFI Dependencies
+
+On Raspberry Pi OS install the following system dependencies.
 
 ```bash
 sudo apt update
